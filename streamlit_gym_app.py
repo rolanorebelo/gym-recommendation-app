@@ -8,10 +8,14 @@ from streamlit_folium import folium_static
 import plotly.express as px
 from textblob import TextBlob
 
-nltk.download('punkt', quiet=True)
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Google Maps API Key (make sure to replace with your own key)
-API_KEY = 'AIzaSyDrPRRhrOR1GoHcuDe8oI3uII5R8Qsfb7U'
+API_KEY = os.getenv('API_KEY')
 gmaps = googlemaps.Client(key=API_KEY)
 
 preference_keywords = {
