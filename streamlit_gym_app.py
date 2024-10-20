@@ -11,11 +11,23 @@ import corpora
 from dotenv import load_dotenv
 import os
 
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+nltk.download('punkt', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
+
+os.environ['NLTK_DATA'] = os.path.join(os.getcwd(), 'nltk_data')
+
 # Load environment variables from .env file
 load_dotenv()
 
-# Set the NLTK_DATA environment variable to a writable directory
-os.environ['NLTK_DATA'] = '/tmp/nltk_data'
 
 # Download necessary NLTK data
 nltk.download('punkt', quiet=True)

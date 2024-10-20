@@ -1,10 +1,10 @@
 streamlit
 googlemaps
-nltk
 pandas
 requests
 folium
 streamlit-folium
 plotly
-textblob
 python-dotenv
+textblob==0.17.1
+nltk==3.6.5
