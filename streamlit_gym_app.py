@@ -14,7 +14,6 @@ nltk.download('punkt', quiet=True)
 API_KEY = 'AIzaSyDrPRRhrOR1GoHcuDe8oI3uII5R8Qsfb7U'
 gmaps = googlemaps.Client(key=API_KEY)
 
-# Sample keywords to detect preferences in reviews
 preference_keywords = {
     'hygiene': ['clean', 'sanitary', 'hygienic'],
     'equipment_quality': ['equipment', 'machines', 'weights', 'dumbbells'],
