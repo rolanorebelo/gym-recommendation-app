@@ -1,8 +1,6 @@
-mkdir -p ~/.streamlit/
-echo "[server]
-headless = true
-port = $PORT
-enableCORS = false
-" > ~/.streamlit/config.toml
+#!/bin/bash
 
-python -m textblob.download_corpora
+# Download NLTK data
+python -m nltk.downloader punkt
+python -m nltk.downloader averaged_perceptron_tagger
+python -m nltk.downloader all
