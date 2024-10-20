@@ -14,6 +14,12 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+# Set the NLTK_DATA environment variable to a writable directory
+os.environ['NLTK_DATA'] = '/tmp/nltk_data'
+
+# Download necessary NLTK data
+nltk.download('punkt', quiet=True)
+
 # Google Maps API Key (make sure to replace with your own key)
 API_KEY = os.getenv('API_KEY')
 gmaps = googlemaps.Client(key=API_KEY)
