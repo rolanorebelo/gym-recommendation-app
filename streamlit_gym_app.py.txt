@@ -1,0 +1,128 @@
+import streamlit as st
+import requests
+import pandas as pd
+import googlemaps
+from textblob import TextBlob
+
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Google Maps API Key (make sure to replace with your own key)
+API_KEY = os.getenv('API_KEY')
+gmaps = googlemaps.Client(key=API_KEY)
+
+# Sample keywords to detect preferences in reviews
+preference_keywords = {
+    'hygiene': ['clean', 'sanitary', 'hygienic'],
+    'equipment_quality': ['equipment', 'machines', 'weights', 'dumbbells'],
+    'less_crowd': ['crowded', 'busy', 'people'],
+    'trainer_knowledge': ['trainer', 'coach', 'instructor', 'knowledgeable']
+}
+
+# Function to get nearby gyms near the specified location
+def get_nearby_gyms(lat, lng, radius, place_type):
+    url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius={radius}&type={place_type}&key={API_KEY}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json().get('results', [])
+    else:
+        st.error("Error fetching gyms: " + response.json().get('error_message'))
+        return []
+
+# Function to get reviews for a specific place
+def get_reviews(place_id):
+    details_url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,rating,reviews&key={API_KEY}"
+    details_response = requests.get(details_url)
+    if details_response.status_code == 200:
+        return details_response.json().get('result', {}).get('reviews', [])
+    else:
+        st.error("Error fetching reviews: " + details_response.json().get('error_message'))
+        return []
+
+# Function to get the latitude and longitude of a location based on user input
+def get_lat_lng(location_name):
+    geocode_result = gmaps.geocode(location_name)
+    if geocode_result:
+        lat_lng = geocode_result[0]['geometry']['location']
+        return lat_lng['lat'], lat_lng['lng']
+    else:
+        st.error("Location not found.")
+        return None, None
+
+# Function to calculate tailored gym rating
+def calculate_preference_rating(review_text, preferences):
+    blob = TextBlob(review_text.lower())
+    score = 0
+    for pref, importance in preferences.items():
+        for keyword in preference_keywords[pref]:
+            if keyword in blob.words:
+                score += importance  # Weight by user preference
+    return score
+
+# Function to get gym reviews and calculate tailored rating
+def get_gym_reviews_and_ratings(lat, lng, radius, preferences):
+    gyms = get_nearby_gyms(lat, lng, radius, 'gym')
+    all_gym_ratings = []
+
+    for gym in gyms:
+        place_id = gym['place_id']
+        gym_name = gym['name']
+
+        reviews = get_reviews(place_id)
+        total_score = 0
+        for review in reviews:
+            review_text = review.get('text', '')
+            review_score = calculate_preference_rating(review_text, preferences)
+            total_score += review_score
+
+        avg_rating = total_score / len(reviews) if reviews else 0
+        all_gym_ratings.append({'Gym Name': gym_name, 'Tailored Rating': avg_rating})
+
+    return pd.DataFrame(all_gym_ratings)
+
+# Streamlit UI
+st.title("Gym Recommendation App")
+
+# User input for location
+location = st.text_input("Enter the location (e.g., 'New York, NY')")
+
+# User input for preferences
+st.subheader("Rate the importance of the following factors (1 = Low, 5 = High):")
+hygiene = st.slider("Hygiene", 1, 5, 3)
+equipment_quality = st.slider("Equipment Quality", 1, 5, 3)
+less_crowd = st.slider("Less Crowd", 1, 5, 3)
+trainer_knowledge = st.slider("Trainer Knowledge", 1, 5, 3)
+
+# Button to get recommendations
+if st.button("Get Gym Recommendations"):
+    lat, lng = get_lat_lng(location)
+
+    if lat is not None and lng is not None:
+        radius = 2000  # Radius in meters (2 km)
+        preferences = {
+            'hygiene': hygiene,
+            'equipment_quality': equipment_quality,
+            'less_crowd': less_crowd,
+            'trainer_knowledge': trainer_knowledge
+        }
+
+        # Get gym reviews and calculate tailored ratings
+        gym_ratings_df = get_gym_reviews_and_ratings(lat, lng, radius, preferences)
+
+        # Sort gyms by tailored rating
+        sorted_gyms = gym_ratings_df.sort_values(by='Tailored Rating', ascending=False)
+
+        # Display top gyms
+        st.write("Top gyms tailored to your preferences:")
+        st.dataframe(sorted_gyms)
+        
+        # Option to download the recommendations as an Excel file
+        st.download_button(
+            label="Download Gym Recommendations as Excel",
+            data=gym_ratings_df.to_csv(index=False),
+            file_name='tailored_gym_recommendations.csv',
+            mime='text/csv'
+        )

@@ -1,0 +1,10 @@
+streamlit
+googlemaps
+nltk
+pandas
+requests
+folium
+streamlit-folium
+plotly
+textblob
+python-dotenv
