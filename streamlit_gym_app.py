@@ -10,6 +10,8 @@ from textblob import TextBlob
 import corpora
 from dotenv import load_dotenv
 import os
+import sklearn
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 import ssl
 
@@ -126,6 +128,39 @@ def get_gym_reviews_and_ratings(lat, lng, radius, preferences, custom_filters):
 
     return pd.DataFrame(all_gym_ratings)
 
+def calculate_metrics(tailored_ratings, satisfaction_threshold):
+    """
+    Calculate evaluation metrics based on tailored ratings and user feedback.
+    
+    Parameters:
+        tailored_ratings (pd.DataFrame): DataFrame with 'Gym Name', 'Tailored Rating', and 'User Feedback'.
+                                         'User Feedback': 1 if satisfied, 0 otherwise.
+        satisfaction_threshold (float): Threshold for considering a gym as satisfactory based on tailored rating.
+    
+    Returns:
+        dict: Precision, Recall, F1 Score, and Accuracy.
+    """
+    # Generate predictions (1 if tailored rating >= threshold, else 0)
+    tailored_ratings['Predicted'] = (tailored_ratings['Tailored Rating'] >= satisfaction_threshold).astype(int)
+
+    # Extract ground truth and predictions
+    y_true = tailored_ratings['User Feedback']  # Actual satisfaction (1 = satisfied, 0 = not satisfied)
+    y_pred = tailored_ratings['Predicted']     # Predicted satisfaction based on tailored rating
+
+    # Calculate metrics
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+    accuracy = accuracy_score(y_true, y_pred)
+
+    return {
+        "Precision": precision,
+        "Recall": recall,
+        "F1 Score": f1,
+        "Accuracy": accuracy
+    }
+
+
 def create_map(gyms, lat, lng):
     m = folium.Map(location=[lat, lng], zoom_start=13)
     for _, gym in gyms.iterrows():
@@ -135,8 +170,36 @@ def create_map(gyms, lat, lng):
         ).add_to(m)
     return m
 
-# Streamlit UI
-st.title("Enhanced Gym Recommendation App")
+# Apply custom CSS styling for title and subtitle
+st.markdown(
+    """
+    <style>
+    /* Title styling */
+    h1 {
+        color: #4682B4 !important;  /* Nice shade of blue */
+        text-align: center;         /* Center alignment */
+        font-size: 3em;             /* Larger font size */
+    }
+    
+    /* Subtitle styling */
+    h2 {
+        color: gray !important;
+        text-align: center;         /* Center alignment */
+        font-size: 1.5em;           /* Slightly smaller font size */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Title and subtitle with styling
+st.markdown(
+    """
+    <h1>FitFindr</h1>
+    <h2>Enhanced Gym Recommendation App</h2>
+    """,
+    unsafe_allow_html=True,
+)
 
 # User input for location
 location = st.text_input("Enter the location (e.g., 'New York, NY')")
@@ -237,6 +300,46 @@ if st.button("Get Gym Recommendations"):
 
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
+st.subheader("User Feedback")
+feedback_data = []
+
+for _, row in gym_ratings_df.iterrows():
+    st.write(f"Gym: **{row['Gym Name']}** (Tailored Rating: {row['Tailored Rating']:.2f})")
+    feedback = st.radio(
+        f"Are you satisfied with {row['Gym Name']}?",
+        options=["Yes", "No"],
+        key=row['Gym Name']
+    )
+    feedback_data.append({
+        "Gym Name": row['Gym Name'],
+        "Tailored Rating": row['Tailored Rating'],
+        "User Feedback": 1 if feedback == "Yes" else 0  # 1 = Satisfied, 0 = Not Satisfied
+    })
+
+feedback_df = pd.DataFrame(feedback_data)
+st.write("Feedback Data:")
+st.dataframe(feedback_df)
+
+if st.button("Calculate Metrics"):
+    with st.spinner("Calculating metrics..."):
+        satisfaction_threshold = st.slider("Set satisfaction threshold (Tailored Rating)", 0.0, 5.0, 4.0, 0.1)
+        metrics = calculate_metrics(feedback_df, satisfaction_threshold)
+
+        # Display the results
+        st.write("### Evaluation Metrics")
+        st.write(f"**Precision:** {metrics['Precision']:.2f}")
+        st.write(f"**Recall:** {metrics['Recall']:.2f}")
+        st.write(f"**F1 Score:** {metrics['F1 Score']:.2f}")
+        st.write(f"**Accuracy:** {metrics['Accuracy']:.2f}")
+
+import plotly.express as px
+
+st.subheader("Feedback Summary")
+fig = px.histogram(feedback_df, x="Tailored Rating", color="User Feedback",
+                   labels={"User Feedback": "Feedback"},
+                   title="Tailored Ratings vs. User Feedback")
+st.plotly_chart(fig)
+
 
 # Add a sidebar for additional information or features
 st.sidebar.title("About")
