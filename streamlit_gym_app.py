@@ -303,42 +303,49 @@ if st.button("Get Gym Recommendations"):
 st.subheader("User Feedback")
 feedback_data = []
 
-for _, row in gym_ratings_df.iterrows():
-    st.write(f"Gym: **{row['Gym Name']}** (Tailored Rating: {row['Tailored Rating']:.2f})")
-    feedback = st.radio(
-        f"Are you satisfied with {row['Gym Name']}?",
-        options=["Yes", "No"],
-        key=row['Gym Name']
-    )
-    feedback_data.append({
-        "Gym Name": row['Gym Name'],
-        "Tailored Rating": row['Tailored Rating'],
-        "User Feedback": 1 if feedback == "Yes" else 0  # 1 = Satisfied, 0 = Not Satisfied
-    })
+# User Feedback Section
+if 'gym_ratings_df' in locals() or 'gym_ratings_df' in globals():
+    st.subheader("User Feedback")
+    feedback_data = []
 
-feedback_df = pd.DataFrame(feedback_data)
-st.write("Feedback Data:")
-st.dataframe(feedback_df)
+    for _, row in gym_ratings_df.iterrows():
+        st.write(f"Gym: **{row['Gym Name']}** (Tailored Rating: {row['Tailored Rating']:.2f})")
+        feedback = st.radio(
+            f"Are you satisfied with {row['Gym Name']}?",
+            options=["Yes", "No"],
+            key=row['Gym Name']
+        )
+        feedback_data.append({
+            "Gym Name": row['Gym Name'],
+            "Tailored Rating": row['Tailored Rating'],
+            "User Feedback": 1 if feedback == "Yes" else 0  # 1 = Satisfied, 0 = Not Satisfied
+        })
 
-if st.button("Calculate Metrics"):
-    with st.spinner("Calculating metrics..."):
-        satisfaction_threshold = st.slider("Set satisfaction threshold (Tailored Rating)", 0.0, 5.0, 4.0, 0.1)
-        metrics = calculate_metrics(feedback_df, satisfaction_threshold)
+    feedback_df = pd.DataFrame(feedback_data)
+    st.write("Feedback Data:")
+    st.dataframe(feedback_df)
 
-        # Display the results
-        st.write("### Evaluation Metrics")
-        st.write(f"**Precision:** {metrics['Precision']:.2f}")
-        st.write(f"**Recall:** {metrics['Recall']:.2f}")
-        st.write(f"**F1 Score:** {metrics['F1 Score']:.2f}")
-        st.write(f"**Accuracy:** {metrics['Accuracy']:.2f}")
+    if st.button("Calculate Metrics"):
+        with st.spinner("Calculating metrics..."):
+            satisfaction_threshold = st.slider("Set satisfaction threshold (Tailored Rating)", 0.0, 5.0, 4.0, 0.1)
+            metrics = calculate_metrics(feedback_df, satisfaction_threshold)
 
-import plotly.express as px
+            # Display the results
+            st.write("### Evaluation Metrics")
+            st.write(f"**Precision:** {metrics['Precision']:.2f}")
+            st.write(f"**Recall:** {metrics['Recall']:.2f}")
+            st.write(f"**F1 Score:** {metrics['F1 Score']:.2f}")
+            st.write(f"**Accuracy:** {metrics['Accuracy']:.2f}")
 
-st.subheader("Feedback Summary")
-fig = px.histogram(feedback_df, x="Tailored Rating", color="User Feedback",
-                   labels={"User Feedback": "Feedback"},
-                   title="Tailored Ratings vs. User Feedback")
-st.plotly_chart(fig)
+    # Add plotly chart for feedback summary
+    st.subheader("Feedback Summary")
+    fig = px.histogram(feedback_df, x="Tailored Rating", color="User Feedback",
+                       labels={"User Feedback": "Feedback"},
+                       title="Tailored Ratings vs. User Feedback")
+    st.plotly_chart(fig)
+else:
+    st.warning("Please generate gym recommendations first to provide feedback.")
+
 
 
 # Add a sidebar for additional information or features
