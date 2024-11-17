@@ -201,6 +201,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+if 'gym_ratings_df' not in st.session_state:
+    st.session_state.gym_ratings_df = pd.DataFrame()
+
 # User input for location
 location = st.text_input("Enter the location (e.g., 'New York, NY')")
 
@@ -298,17 +301,18 @@ if st.button("Get Gym Recommendations"):
                             mime='text/csv'
                         )
 
+                        # Save the gym ratings to session state
+                        st.session_state.gym_ratings_df = sorted_gyms
+
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
-st.subheader("User Feedback")
-feedback_data = []
 
 # User Feedback Section
-if 'gym_ratings_df' in locals() or 'gym_ratings_df' in globals():
+if not st.session_state.gym_ratings_df.empty:
     st.subheader("User Feedback")
     feedback_data = []
 
-    for _, row in gym_ratings_df.iterrows():
+    for _, row in st.session_state.gym_ratings_df.iterrows():
         st.write(f"Gym: **{row['Gym Name']}** (Tailored Rating: {row['Tailored Rating']:.2f})")
         feedback = st.radio(
             f"Are you satisfied with {row['Gym Name']}?",
@@ -343,6 +347,7 @@ if 'gym_ratings_df' in locals() or 'gym_ratings_df' in globals():
                        labels={"User Feedback": "Feedback"},
                        title="Tailored Ratings vs. User Feedback")
     st.plotly_chart(fig)
+
 else:
     st.warning("Please generate gym recommendations first to provide feedback.")
 
