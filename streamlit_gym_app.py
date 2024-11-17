@@ -312,6 +312,10 @@ if not st.session_state.gym_ratings_df.empty:
     st.subheader("User Feedback")
     feedback_data = []
 
+     # Slider for setting satisfaction threshold
+    satisfaction_threshold = st.slider("Set satisfaction threshold (Tailored Rating)", 0.0, 5.0, 4.0, 0.1)
+
+
     for _, row in st.session_state.gym_ratings_df.iterrows():
         st.write(f"Gym: **{row['Gym Name']}** (Tailored Rating: {row['Tailored Rating']:.2f})")
         feedback = st.radio(
@@ -331,7 +335,7 @@ if not st.session_state.gym_ratings_df.empty:
 
     if st.button("Calculate Metrics"):
         with st.spinner("Calculating metrics..."):
-            satisfaction_threshold = st.slider("Set satisfaction threshold (Tailored Rating)", 0.0, 5.0, 4.0, 0.1)
+
             metrics = calculate_metrics(feedback_df, satisfaction_threshold)
 
             # Display the results
