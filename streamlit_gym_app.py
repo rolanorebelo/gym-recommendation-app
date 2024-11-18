@@ -252,7 +252,7 @@ if st.button("Get Gym Recommendations"):
 
                         # Data visualization
                         st.subheader("Top 10 Gyms by Tailored Rating")
-                        fig = px.bar(sorted_gyms.head(10), x='Gym Name', y='Tailored Rating', title='Top 10 Gyms by Tailored Rating')
+                        fig = px.bar(sorted_gyms.head(10), x='Gym Name', y='Tailored Rating')
                         st.plotly_chart(fig)
 
                         # Option to download the recommendations as a CSV file
