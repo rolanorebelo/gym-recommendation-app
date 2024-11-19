@@ -28,8 +28,6 @@ os.environ['NLTK_DATA'] = os.path.join(os.getcwd(), 'nltk_data')
 # Load environment variables from .env file
 load_dotenv()
 
-
-# Download necessary NLTK data
 nltk.download('punkt', quiet=True)
 
 # Google Maps API Key (make sure to replace with your own key)
@@ -266,8 +264,5 @@ if st.button("Get Gym Recommendations"):
                 except Exception as e:
                     st.error(f"An error occurred: {str(e)}")
 
-# Add a sidebar for additional information or features
 st.sidebar.title("About")
 st.sidebar.info("This app helps you find gyms tailored to your preferences. Enter your location and rate the importance of different factors to get personalized recommendations.")
-
-# You can add more sidebar elements here, such as user profiles or saved searches
