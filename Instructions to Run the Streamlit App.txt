@@ -1,0 +1,20 @@
+Instructions to Run the Streamlit App on Windows
+
+Download and Extract the Project Folder
+
+Download the project folder you shared. If it’s compressed (e.g., .zip), right-click and select "Extract All" to extract it to a folder on your local machine.
+Activate the Existing Virtual Environment
+
+Open Command Prompt and navigate to the project folder where the .venv folder is located. Use the "cd" command (e.g., cd path-to-extracted-folder).
+Activate the virtual environment by typing .venv\Scripts\activate.
+Install Dependencies (if needed)
+
+Run the command pip install -r requirements.txt to ensure all dependencies are installed in the virtual environment.
+Run the Streamlit App
+
+Start the app by typing streamlit run streamlit_gym_app.py.
+A browser window should open automatically, displaying the app. If it doesn’t, copy the local URL provided in the Command Prompt and paste it into your browser.
+Stop the App (When Done)
+
+To stop the app, return to the Command Prompt window and press "Ctrl + C".
+Deactivate the virtual environment by typing "deactivate".

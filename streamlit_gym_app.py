@@ -106,7 +106,7 @@ def get_gym_reviews_and_ratings(lat, lng, radius, preferences, custom_filters):
         total_score = 0
         for review in reviews:
             review_text = review.get('text', '')
-            review_score = calculate_preference_rating(review_text, preferences, custom_filters)
+            review_score = calculate_preference_rating(review_text, preferences, st.session_state.custom_filters)
             total_score += review_score
 
         avg_rating = total_score / len(reviews) if reviews else 0
@@ -179,7 +179,9 @@ atmosphere = st.slider("Atmosphere", 1, 5, 3)
 
 # Custom Filters
 st.subheader("Custom Filters")
-custom_filters = {}
+# Initialize the custom_filters dictionary in session state
+if 'custom_filters' not in st.session_state:
+    st.session_state.custom_filters = {}
 
 # Allow users to add custom filters
 col1, col2, col3 = st.columns(3)
@@ -190,16 +192,18 @@ with col2:
 with col3:
     if st.button("Add Custom Filter"):
         if custom_keyword:
-            custom_filters[custom_keyword] = custom_importance
+            # Add the custom filter to session state
+            st.session_state.custom_filters[custom_keyword] = custom_importance
             st.success(f"Added custom filter: {custom_keyword}")
         else:
             st.error("Please enter a keyword")
 
 # Display current custom filters
-if custom_filters:
+if st.session_state.custom_filters:
     st.write("Current Custom Filters:")
-    for keyword, importance in custom_filters.items():
+    for keyword, importance in st.session_state.custom_filters.items():
         st.write(f"- {keyword}: Importance {importance}")
+
 
 # Additional filters
 st.subheader("Additional Filters")
@@ -228,7 +232,7 @@ if st.button("Get Gym Recommendations"):
             with st.spinner("Fetching gym recommendations..."):
                 try:
                     # Get gym reviews and calculate tailored ratings
-                    gym_ratings_df = get_gym_reviews_and_ratings(lat, lng, radius, preferences, custom_filters)
+                    gym_ratings_df = get_gym_reviews_and_ratings(lat, lng, radius, preferences, st.session_state.custom_filters)
 
                     # Apply filters
                     filtered_gyms = gym_ratings_df[gym_ratings_df['Tailored Rating'] >= min_rating]
